@@ -1,0 +1,6 @@
+{
+  "name": "IndusCRM - CRM de Máquinas & Equipamentos Industriais",
+  "description": "Sistema web CRM para empresas de venda de máquinas e equipamentos industriais, com autenticação, perfis de Gestor e Vendedor, funil Kanban, consulta CNPJ via BrasilAPI e geolocalização com Google Maps.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
