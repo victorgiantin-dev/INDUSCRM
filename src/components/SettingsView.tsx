@@ -59,6 +59,11 @@ export const SettingsView: React.FC = () => {
       {/* Top Banner */}
       <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-xl shadow-xs">
         <div className="flex items-center gap-2 text-xs text-neutral-400 mb-1">
+          <span className="text-purple-400 font-semibold flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Exclusivo para Gestor
+          </span>
+          <span>·</span>
           <span>Infraestrutura do Sistema</span>
           <span>·</span>
           <span>Supabase PostgreSQL + Google Maps + BrasilAPI</span>

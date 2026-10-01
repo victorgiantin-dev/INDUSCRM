@@ -153,20 +153,6 @@ export default function App() {
     setCurrentUser(null);
   };
 
-  // Alternador rápido de perfil para testes (Gestor / Vendedor)
-  const handleSwitchUserRole = (newRole: UserRole) => {
-    if (!currentUser) return;
-    const updated: UserProfile = {
-      ...currentUser,
-      role: newRole,
-      name: newRole === 'gestor' ? 'Carlos Mendes (Gestor)' : 'Marcos Silveira (Vendedor)',
-      id: newRole === 'gestor' ? 'usr_gestor_01' : 'usr_vendedor_01',
-      email: newRole === 'gestor' ? 'gestor@induscrm.com.br' : 'marcos.vendas@induscrm.com.br',
-    };
-    setCurrentUser(updated);
-    localStorage.setItem('indus_current_user', JSON.stringify(updated));
-  };
-
   // Ações de Leads
   const handleSaveLead = async (leadData: Partial<Lead>, isNew: boolean) => {
     const saved = await saveLead(leadData, isNew);
@@ -290,7 +276,6 @@ export default function App() {
           pendingTasksCount={pendingTasksCount}
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
-          onSwitchUserRole={handleSwitchUserRole}
         />
 
         {/* Viewport Principal */}
@@ -390,7 +375,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'configuracoes' && <SettingsView />}
+          {activeTab === 'configuracoes' && currentUser.role === 'gestor' && <SettingsView />}
         </main>
       </div>
 

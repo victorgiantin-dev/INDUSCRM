@@ -10,9 +10,8 @@ import {
   Wrench,
   UserCog,
   Settings,
-  Sparkles,
 } from 'lucide-react';
-import { UserProfile, UserRole } from '../types/crm';
+import { UserProfile } from '../types/crm';
 
 interface SidebarProps {
   user: UserProfile;
@@ -23,7 +22,6 @@ interface SidebarProps {
   pendingTasksCount: number;
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
-  onSwitchUserRole?: (role: UserRole) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -35,7 +33,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingTasksCount,
   mobileMenuOpen,
   setMobileMenuOpen,
-  onSwitchUserRole,
 }) => {
   const isGestor = user.role === 'gestor';
 
@@ -90,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Wrench,
       badge: null,
     },
-    // Usuários: visível exclusivamente para Gestor
+    // Itens exclusivos do perfil GESTOR (Equipe e Configurações de SQL/API)
     ...(isGestor
       ? [
           {
@@ -100,15 +97,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             badge: 'Gestor',
             badgeColor: 'bg-neutral-800 text-neutral-300 border border-neutral-700',
           },
+          {
+            id: 'configuracoes',
+            label: 'Configurações & SQL',
+            icon: Settings,
+            badge: 'Gestor',
+            badgeColor: 'bg-purple-950/60 text-purple-300 border border-purple-800/50',
+          },
         ]
       : []),
-    {
-      id: 'configuracoes',
-      label: 'Configurações & SQL',
-      icon: Settings,
-      badge: 'Supabase',
-      badgeColor: 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/50',
-    },
   ];
 
   const handleSelectTab = (tabId: string) => {
@@ -174,48 +171,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             })}
           </div>
 
-          {/* Manager Quick Note if Vendedor */}
+          {/* Mensagem para perfil Vendedor */}
           {!isGestor && (
             <div className="mt-6 p-3 rounded-lg bg-neutral-950/80 border border-neutral-800 text-[11px] text-neutral-400">
               <span className="font-semibold text-neutral-300 block mb-1">
-                Visualização do Vendedor
+                Acesso Comercial (Vendedor)
               </span>
-              Você tem acesso aos seus leads e tarefas atribuídas pelo gestor.
+              Visualização restrita aos seus próprios leads, empresas e tarefas comerciais.
             </div>
           )}
         </div>
 
-        {/* Bottom Profile switch & fast testing sandbox selector */}
-        <div className="p-4 border-t border-neutral-800 bg-neutral-950/60">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
-              Simular Perfil
-            </span>
-            <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-neutral-900 rounded-lg border border-neutral-800">
-            <button
-              onClick={() => onSwitchUserRole && onSwitchUserRole('gestor')}
-              className={`py-1.5 px-2 text-[11px] font-semibold rounded transition-colors text-center ${
-                user.role === 'gestor'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              Gestor
-            </button>
-            <button
-              onClick={() => onSwitchUserRole && onSwitchUserRole('vendedor')}
-              className={`py-1.5 px-2 text-[11px] font-semibold rounded transition-colors text-center ${
-                user.role === 'vendedor'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              Vendedor
-            </button>
-          </div>
+        {/* Rodapé institucional com indicação de versão e sistema */}
+        <div className="p-3 border-t border-neutral-800 text-center">
+          <span className="text-[10px] text-neutral-400 font-mono">
+            IndusCRM Industrial · v2.4
+          </span>
         </div>
       </aside>
     </>

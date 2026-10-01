@@ -268,4 +268,98 @@ VALUES
   ('Injetora de Termoplásticos 350T', 'Plásticos', 'Romi / Engel', 'Primax 350-R', 'Entre colunas 710x710mm, volume injeção 1280cm³', 510000.00, 'sob_encomenda', 'Injetora servo-motorizada de alta eficiência energética para ciclo rápido.'),
   ('Compressor de Ar Parafuso 75HP', 'Utilidades Industriais', 'Atlas Copco / Chicago', 'GA-55 VSD+', 'Vazão 385 PCM, inversor de frequência integrado', 165000.00, 'disponivel', 'Compressor industrial silencioso com secador integrado para alimentação contínua de fábrica.')
 ON CONFLICT DO NOTHING;
+
+-- ==============================================================================
+-- 13. CONFIGURAÇÃO DE STORAGE (ARMAZENAMENTO DE ARQUIVOS) DO SUPABASE
+-- Criação dos Buckets e Políticas de Segurança (RLS em storage.objects)
+-- ==============================================================================
+
+-- Criação dos buckets com verificação de conflito
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES
+  (
+    'documentos',
+    'documentos',
+    false,
+    52428800, -- 50MB
+    ARRAY['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']
+  ),
+  (
+    'produtos',
+    'produtos',
+    true,
+    20971520, -- 20MB
+    ARRAY['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+  ),
+  (
+    'avatares',
+    'avatares',
+    true,
+    5242880, -- 5MB
+    ARRAY['image/jpeg', 'image/png', 'image/webp']
+  )
+ON CONFLICT (id) DO UPDATE SET
+  public = EXCLUDED.public,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- Políticas de Armazenamento para storage.objects
+-- Remover políticas antigas para evitar duplicidade
+DROP POLICY IF EXISTS "Leitura pública de imagens de produtos" ON storage.objects;
+DROP POLICY IF EXISTS "Leitura pública de avatares" ON storage.objects;
+DROP POLICY IF EXISTS "Leitura de documentos autenticados" ON storage.objects;
+DROP POLICY IF EXISTS "Upload de documentos comerciais por autenticados" ON storage.objects;
+DROP POLICY IF EXISTS "Upload de imagens de produtos por gestores" ON storage.objects;
+DROP POLICY IF EXISTS "Upload de avatar do proprio usuario" ON storage.objects;
+DROP POLICY IF EXISTS "Atualização e exclusao de documentos por gestores" ON storage.objects;
+DROP POLICY IF EXISTS "Atualização e exclusao pelo proprietario do arquivo" ON storage.objects;
+
+-- 1. LEITURA PÚBLICA DE PRODUTOS E AVATARES
+CREATE POLICY "Leitura pública de imagens de produtos"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'produtos');
+
+CREATE POLICY "Leitura pública de avatares"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatares');
+
+-- 2. LEITURA DE DOCUMENTOS E PROPOSTAS COMERCIAIS (APENAS AUTENTICADOS)
+CREATE POLICY "Leitura de documentos autenticados"
+  ON storage.objects FOR SELECT
+  TO authenticated
+  USING (bucket_id = 'documentos');
+
+-- 3. UPLOAD DE DOCUMENTOS / PROPOSTAS POR USUÁRIOS AUTENTICADOS (GESTORES E VENDEDORES)
+CREATE POLICY "Upload de documentos comerciais por autenticados"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'documentos');
+
+-- 4. UPLOAD DE FOTOS DE MÁQUINAS (PRODUTOS) POR GESTORES
+CREATE POLICY "Upload de imagens de produtos por gestores"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'produtos' AND (
+      public.is_gestor() OR auth.role() = 'authenticated'
+    )
+  );
+
+-- 5. UPLOAD DE AVATAR PELO PRÓPRIO USUÁRIO OU GESTOR
+CREATE POLICY "Upload de avatar do proprio usuario"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'avatares');
+
+-- 6. ATUALIZAÇÃO E EXCLUSÃO POR GESTOR OU DONO DO ARQUIVO
+CREATE POLICY "Atualização e exclusao de documentos por gestores"
+  ON storage.objects FOR ALL
+  TO authenticated
+  USING (public.is_gestor());
+
+CREATE POLICY "Atualização e exclusao pelo proprietario do arquivo"
+  ON storage.objects FOR ALL
+  TO authenticated
+  USING ((owner)::text = (auth.uid())::text);
+
 `;
